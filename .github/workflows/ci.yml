@@ -19,10 +19,45 @@ jobs:
       - name: End-to-end smoke test
         run: node test/smoke.mjs
 
-  shellcheck:
+  # The smoke test runs the installer from the checkout, which cannot catch a
+  # file missing from package.json "files". This installs from the real tarball.
+  tarball:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check hook syntax
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install from a packed tarball and scaffold a project
         run: |
-          for f in template/.claude/hooks/*.sh; do bash -n "$f"; done
+          set -euo pipefail
+          tarball="$(npm pack --silent)"
+          mkdir -p /tmp/consumer && cd /tmp/consumer
+          npm init -y >/dev/null
+          npm install --no-save "$GITHUB_WORKSPACE/$tarball"
+          npx create-bitacora --yes
+          test -f .bitacora/cli.mjs
+          test -f MISTAKES.md
+          test -f .claude/skills/log-mistake.md
+          test -d node_modules/create-bitacora/global
+          # doctor must fail here: the template ships placeholders on purpose.
+          if node .bitacora/cli.mjs doctor; then
+            echo "doctor passed on a fresh install; it is supposed to fail on placeholders"
+            exit 1
+          fi
+          CLAUDE_CONFIG_DIR=/tmp/fakehome/.claude sh -c 'mkdir -p /tmp/fakehome/.claude && npx create-bitacora --global'
+          test -f /tmp/fakehome/.claude/skills/start-project/SKILL.md
+          grep -q "BEGIN:bitacora" /tmp/fakehome/.claude/CLAUDE.md
+
+  hooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hook syntax
+        run: for f in template/.claude/hooks/*.sh; do bash -n "$f"; done
+      - name: The repo's own logbook is healthy
+        run: node .bitacora/cli.mjs doctor
+      - name: template/ and the repo's installed copies are in sync
+        run: |
+          node scripts/sync-self.mjs
+          git diff --exit-code || { echo "run: npm run sync:self, then commit"; exit 1; }

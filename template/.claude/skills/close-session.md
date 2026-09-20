@@ -1,6 +1,6 @@
 ---
 name: close-session
-description: Close a working session properly — verify the build, refresh STATE.md, log what broke and what worked, and leave doctor green.
+description: Use when a working session is ending, or before /clear when switching tasks — verify the build, refresh STATE.md, log what broke and what worked, and leave doctor green.
 ---
 
 # Close the session

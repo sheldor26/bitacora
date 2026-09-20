@@ -42,7 +42,10 @@ A field the importer refuses to overwrite, verified by a script in CI, is a
 guardrail. It works whether or not anyone read the entry.
 
 This is the part that makes the difference between a log that compounds and a
-log that just grows.
+log that just grows, which is why it is the one section `doctor` refuses to let
+you skip: a missing or near-empty **Guardrail** fails the check, and fails CI.
+Most postmortem templates ask for a lesson and get one. Asking for a mechanism,
+and declining the entry without one, is the whole difference.
 
 ## LEARNINGS.md — read offensively, when starting something new
 
@@ -82,7 +85,8 @@ is the single highest-leverage habit in the system, and the only one that
 depends on you.
 
 **Before any risky edit.** `recall <tag>`. Auth, payments, migrations, data
-writes, scrapers, deploy config, anything touching money or user data.
+writes, scrapers, deploy config, anything touching money or user data. The top
+hits print in full, so this is one call rather than a call plus a file read.
 
 **Closing the session.** Build green, `STATE.md` rewritten (not appended) with
 today's date, anything that broke logged with a guardrail, `doctor` green. The

@@ -27,11 +27,13 @@ that survives between sessions.
 | [DECISIONS.md](DECISIONS.md) | A choice made, with the alternatives considered. | When the choice is made |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How the thing is built and why. | When the shape changes |
 
-**Read before you write.** Before touching an unfamiliar area, pull the
-relevant history instead of reading whole files:
+**Read before you plan.** Not before the first edit — before the plan. A plan
+written without the history bakes the repeat mistake into it, and implementation
+then carries it out faithfully. Pull the relevant history instead of reading
+whole files:
 
 ```bash
-node .bitacora/cli.mjs recall <tag>        # e.g. recall auth, recall pricing, recall deploy
+node .bitacora/cli.mjs recall <tag>        # prints the matching entries in full
 node .bitacora/cli.mjs stats               # where the recurring friction is
 ```
 
@@ -47,21 +49,24 @@ node .bitacora/cli.mjs new learning "Short, specific title" --tags area
 node .bitacora/cli.mjs new decision "Short, specific title" --tags area
 ```
 
-The command scaffolds the entry and assigns the id. Then fill the
-`bitacora:fill-me` blocks in full prose — `doctor` fails while any remain.
+The command scaffolds the entry and assigns the id; you write the prose.
+`doctor` rejects an entry whose sections are unfilled, and rejects a mistake
+whose **Guardrail** says nothing — naming a check, a test, a type or a refusal
+in the code, not an intention to be more careful next time.
 
 ## Commands
 
 ```bash
-{{DEV_COMMAND}}                            # run it locally
-{{BUILD_COMMAND}}                          # this is the test: it must pass before a session ends
-{{TEST_COMMAND}}                           # <!-- bitacora:fill-me or delete this line if there is no test suite -->
-node .bitacora/cli.mjs doctor              # is the logbook healthy?
+{{DEV_COMMAND}}  # run it locally
+{{BUILD_COMMAND}}  # this is the test: it must pass before a session ends
+{{TEST_COMMAND}}  # test suite
+node .bitacora/cli.mjs doctor  # is the logbook healthy?
 ```
 
 ## Before closing a session
 
-1. `{{BUILD_COMMAND}}` passes.
+1. The build passes (see **Commands** above). If it does not, say so in
+   `STATE.md` under **In flight** rather than closing quietly on red.
 2. `STATE.md` reflects reality, and its `updated:` line is today.
 3. Anything that broke is in `MISTAKES.md`, with a guardrail — not just a description.
 4. `node .bitacora/cli.mjs doctor` is green.

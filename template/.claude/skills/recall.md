@@ -1,9 +1,9 @@
 ---
 name: recall
-description: Pull the relevant slice of project history before touching an unfamiliar or risky area, instead of loading whole log files.
+description: Pull the relevant slice of project history before writing a plan, and again before the first edit in an unfamiliar or risky area, instead of loading whole log files.
 ---
 
-# Recall before you write
+# Recall before you plan
 
 The logbook is deliberately *not* loaded into context automatically. Reading
 `MISTAKES.md` in full costs thousands of tokens for history that is irrelevant
@@ -11,9 +11,19 @@ to the task at hand. Retrieve by tag instead.
 
 ## When to do this
 
-Before the first edit in any area you have not touched this session, and always
-before: auth, payments, migrations, data writes, scrapers, deploy config, and
-anything that touches money or user data.
+**Before writing the plan**, not before the first edit. This is the part people
+get wrong, including the first version of this skill.
+
+A plan built without the history bakes the repeat mistake into the plan itself,
+and then implementation carries it out faithfully. By the time the first edit
+comes around, recalling the entry means either discarding the plan or quietly
+routing around the guardrail — and routing around it is what actually happens.
+Two minutes earlier, the same entry changes the design for free.
+
+So: in plan mode, `recall` is the first move, before the plan is drafted. Then
+again before the first edit in any area not touched this session. Always for
+auth, payments, migrations, data writes, scrapers, deploy config, and anything
+that touches money or user data.
 
 ## How
 

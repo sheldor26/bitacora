@@ -1,0 +1,12 @@
+<!-- BEGIN:bitacora -->
+## Starting or adopting a project
+
+Any project worth more than one session keeps a logbook. When starting a new
+project, or when asked to set up a repository that has no `bitacora.config.json`,
+follow the `start-project` skill before writing feature code.
+
+Where a `bitacora.config.json` already exists: the logs are not `@`-imported, so
+read them on demand — `node .bitacora/cli.mjs recall <tag>` before touching an
+unfamiliar or risky area, and log mistakes the moment they happen rather than at
+the end of the session.
+<!-- END:bitacora -->

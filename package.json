@@ -9,6 +9,7 @@
   "files": [
     "bin",
     "template",
+    "global",
     "README.md",
     "LICENSE"
   ],
@@ -29,14 +30,15 @@
   "author": "Juan Mirande",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/USERNAME/bitacora.git"
+    "url": "git+https://github.com/sheldor26/bitacora.git"
   },
-  "homepage": "https://github.com/USERNAME/bitacora#readme",
+  "homepage": "https://github.com/sheldor26/bitacora#readme",
   "bugs": {
-    "url": "https://github.com/USERNAME/bitacora/issues"
+    "url": "https://github.com/sheldor26/bitacora/issues"
   },
   "scripts": {
     "test": "node test/smoke.mjs",
-    "logbook": "node .bitacora/cli.mjs"
+    "logbook": "node .bitacora/cli.mjs",
+    "sync:self": "node scripts/sync-self.mjs"
   }
 }

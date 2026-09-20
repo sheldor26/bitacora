@@ -10,8 +10,9 @@
  * than replacing it.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync, chmodSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync, chmodSync, rmSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
@@ -39,6 +40,19 @@ const opt = (name, fallback) => {
   return argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : fallback;
 };
 
+const VERSION = (() => {
+  try {
+    return JSON.parse(readFileSync(join(HERE, '..', 'package.json'), 'utf8')).version;
+  } catch {
+    return '0.0.0';
+  }
+})();
+
+if (flag('version') || flag('v')) {
+  console.log(VERSION);
+  process.exit(0);
+}
+
 if (flag('help') || flag('h')) {
   console.log(`create-bitacora — install the logbook your coding agent keeps
 
@@ -46,6 +60,11 @@ if (flag('help') || flag('h')) {
   npx create-bitacora --yes               non-interactive, detect what it can
   npx create-bitacora --dir ./my-app      install somewhere else
   npx create-bitacora --force             overwrite files that already exist
+
+  npx create-bitacora --global            teach Claude Code to do this on every
+                                          new project, once, for all projects
+  npx create-bitacora --global --remove   undo that
+  npx create-bitacora --version
 
 After installing, \`doctor\` fails on purpose: the template ships with
 placeholders, and filling them in is step one.
@@ -56,6 +75,96 @@ placeholders, and filling them in is step one.
 const TARGET = join(process.cwd(), opt('dir', '.'));
 const FORCE = flag('force');
 const YES = flag('yes') || flag('y');
+
+// ----------------------------------------------------------------- global
+
+/**
+ * --global: install the rule and the skill that make Claude Code reach for
+ * this on its own. Writes only inside the Claude config directory, and only
+ * inside a sentinel block in CLAUDE.md, so anything the user wrote there
+ * survives.
+ */
+function installGlobal() {
+  const cfg = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
+  const GLOBAL = join(HERE, '..', 'global');
+  const BEGIN = '<!-- BEGIN:bitacora -->';
+  const END = '<!-- END:bitacora -->';
+
+  /** Strip the owned block from CLAUDE.md, leaving every other line untouched. */
+  const withoutBlock = (text) => {
+    if (!text.includes(BEGIN) || !text.includes(END)) return null;
+    const out = text.slice(0, text.indexOf(BEGIN)) + text.slice(text.indexOf(END) + END.length);
+    return out.replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+  };
+
+  if (flag('remove')) {
+    const memory = join(cfg, 'CLAUDE.md');
+    if (existsSync(memory)) {
+      const stripped = withoutBlock(readFileSync(memory, 'utf8'));
+      if (stripped === null) console.log(`${c.yellow('·')} CLAUDE.md has no bitacora block`);
+      else {
+        writeFileSync(memory, stripped.trim() ? stripped : '');
+        console.log(`${c.green('-')} CLAUDE.md ${c.dim('bitacora block removed; everything else kept')}`);
+      }
+    }
+    const skillDir = join(cfg, 'skills', 'start-project');
+    if (existsSync(skillDir)) {
+      rmSync(skillDir, { recursive: true, force: true });
+      console.log(`${c.green('-')} skills/start-project`);
+    }
+    console.log(`\n${c.b('Removed.')} ${c.dim('Nothing bitacora put in ' + cfg + ' remains. Projects already using it are untouched.')}\n`);
+    process.exit(0);
+  }
+
+  if (!existsSync(cfg)) {
+    console.log(`${c.yellow('!')} ${cfg} does not exist.`);
+    console.log(c.dim('  That directory is created the first time Claude Code runs. Start it once, then try again.'));
+    console.log(c.dim('  If your config lives elsewhere, set CLAUDE_CONFIG_DIR and re-run.'));
+    process.exit(1);
+  }
+
+  // 1. The skill: the procedure itself.
+  const skillSrc = join(GLOBAL, 'skills', 'start-project', 'SKILL.md');
+  const skillDest = join(cfg, 'skills', 'start-project', 'SKILL.md');
+  const incoming = readFileSync(skillSrc, 'utf8');
+  if (existsSync(skillDest) && readFileSync(skillDest, 'utf8') !== incoming && !FORCE) {
+    console.log(`${c.yellow('·')} skills/start-project/SKILL.md differs from this version, left alone ${c.dim('(--force to update)')}`);
+  } else {
+    mkdirSync(dirname(skillDest), { recursive: true });
+    writeFileSync(skillDest, incoming);
+    console.log(`${c.green('+')} skills/start-project/SKILL.md`);
+  }
+
+  // 2. The rule: what makes it fire without being asked.
+  const blockBody = readFileSync(join(GLOBAL, 'CLAUDE.md.block'), 'utf8').trim();
+  const memoryPath = join(cfg, 'CLAUDE.md');
+  const existing = existsSync(memoryPath) ? readFileSync(memoryPath, 'utf8') : '';
+  let next;
+  if (existing.includes(BEGIN) && existing.includes(END)) {
+    const before = existing.slice(0, existing.indexOf(BEGIN));
+    const after = existing.slice(existing.indexOf(END) + END.length);
+    next = `${before}${blockBody}${after}`;
+    console.log(`${c.green('~')} CLAUDE.md ${c.dim('bitacora block refreshed; everything else untouched')}`);
+  } else {
+    next = existing.trimEnd() + (existing.trim() ? '\n\n' : '') + blockBody + '\n';
+    console.log(`${c.green('+')} CLAUDE.md ${c.dim(existing.trim() ? 'bitacora block appended' : 'created')}`);
+  }
+  writeFileSync(memoryPath, next);
+
+  console.log(`
+${c.b('Done.')} ${c.dim(cfg)}
+
+Claude Code now reaches for the logbook on its own when you start a project,
+and knows to ${c.b('recall')} instead of reading whole logs in projects that
+already have one. Restart any open session to pick it up.
+
+${c.dim('The rule lives in a BEGIN/END block — re-running this updates only that block.')}
+${c.dim('To remove it: delete the block from CLAUDE.md and the skills/start-project directory.')}
+`);
+  process.exit(0);
+}
+
+if (flag('global')) installGlobal();
 
 // -------------------------------------------------------------- detection
 
@@ -152,16 +261,35 @@ function walk(dir, base = dir) {
   return out;
 }
 
+// Two classes of placeholder, because an absent value means different things.
+//
+// A command that does not exist should take its whole line with it: a project
+// with no test suite must not ship a blank test line in its CLAUDE.md. These
+// therefore only ever appear inside a fenced command block, where dropping a
+// line is safe — never inside a numbered list.
+const COMMAND_VARS = ['DEV_COMMAND', 'BUILD_COMMAND', 'TEST_COMMAND'];
+
+// Prose that detection could not supply is something the user has to write, so
+// it becomes a placeholder that doctor will refuse to let them forget.
+const PROSE_HINTS = {
+  ONE_LINE_DESCRIPTION: 'one line: what this project is and who it is for',
+  STACK: 'the stack in one line — language, framework, database, host',
+};
+
 function fill(text, vars) {
-  let out = text.replace(/\{\{(\w+)\}\}/g, (_, k) => (k in vars ? vars[k] : `{{${k}}}`));
-  // A blank test command would leave a dangling line in the commands block.
-  if (!vars.TEST_COMMAND) {
-    out = out
-      .split('\n')
-      .filter((l) => !/bitacora:fill-me or delete this line if there is no test suite/.test(l))
-      .join('\n');
-  }
-  return out;
+  return text
+    .split('\n')
+    .filter((line) => {
+      // Drop a command line whose command does not exist in this project.
+      const used = [...line.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]);
+      return !used.some((k) => COMMAND_VARS.includes(k) && !vars[k]);
+    })
+    .join('\n')
+    .replace(/\{\{(\w+)\}\}/g, (whole, k) => {
+      if (vars[k]) return vars[k];
+      if (k in PROSE_HINTS) return `<!-- bitacora:fill-me ${PROSE_HINTS[k]} -->`;
+      return k in vars ? '' : whole;
+    });
 }
 
 function mergeSettings(targetPath, incoming) {
@@ -237,4 +365,6 @@ ${c.b('Installed.')} Three things, in order:
      ${c.dim('node .bitacora/cli.mjs new mistake "Title" --tags area --severity high')}
 
 ${c.dim('The hooks are wired: a digest on session start, a checked close on session end.')}
+${c.dim('To have Claude Code do all of this on its own for every future project:')}
+  ${c.dim('npx create-bitacora@latest --global')}
 `);

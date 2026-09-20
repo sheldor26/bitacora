@@ -4,15 +4,25 @@
 
 `CLAUDE.md` holds rules, which are stable. This holds history, which
 accumulates. Putting accumulating content in an always-loaded file is the
-problem bitácora exists to solve — and `doctor` fails if you try, by checking
+problem bitacora exists to solve — and `doctor` fails if you try, by checking
 that `CLAUDE.md` does not `@`-import a log.
 
 ### Why not use Claude Code's built-in memory?
 
-Use both. Built-in memory follows *you* across projects. This lives in the
-repository, versions with the code, shows up in pull requests, and is readable
-by a collaborator or a different tool entirely. A guardrail that only exists in
-one person's assistant is not a guardrail.
+Use both, but know what each one is. Claude Code's **auto memory** is stored
+per repository at `~/.claude/projects/<project>/memory/` — notes Claude writes
+for itself about your preferences, your corrections, and ongoing project
+context. It is on by default.
+
+It is outside your repository, so it does not version with the code, does not
+appear in a pull request, and is invisible to a teammate or to any other tool.
+Nothing checks whether an entry is useful. And it loads at the start of every
+conversation, which is the context cost this project is built to avoid — except
+you never see the file, so you cannot tell when it has grown.
+
+Auto memory is good at learning how you like to work. This is for what the
+project learned the hard way, in the repository, where it survives you changing
+assistants.
 
 ### Won't the agent just ignore the instructions to log things?
 
@@ -56,3 +66,35 @@ hat. The `recall` skill tells the agent the same thing.
 ### Is there a hosted version / dashboard / MCP server?
 
 No. It is markdown in a git repository, on purpose.
+
+### `doctor` rejected my entry for a "near-empty Guardrail". I wrote a sentence.
+
+Then the sentence was probably a lesson rather than a mechanism. The check wants
+the thing that makes the failure impossible without anyone remembering: a field
+the importer refuses to overwrite, a type that will not compile, a test, a hook,
+a script in CI. Forty characters is the floor, but length is not the test —
+"added `--strict` to the CI doctor run" passes and is a perfectly good guardrail.
+
+If nothing can prevent it, say that and say what detects it instead. That is a
+real entry. An empty section is not.
+
+### Can I turn the section requirement off?
+
+Not with a flag. You can change `sections` for a log in
+`bitacora.config.json` — set it to `[]` and nothing is required. It is your
+repository. But that requirement is the difference between this and a folder of
+markdown files, so consider whether the friction is telling you the entry is not
+finished.
+
+### Does `--global` affect projects that already have a logbook?
+
+Only in that it tells Claude Code to `recall` instead of reading whole logs. It
+never installs anything into an existing project on its own, and the skill asks
+before adopting a repository that already has its own conventions.
+
+### How do I uninstall?
+
+Per project: delete the six markdown files, `bitacora.config.json`,
+`.bitacora/`, and the bitacora entries from `.claude/`. Globally:
+`npx create-bitacora --global --remove`, which strips its block from
+`~/.claude/CLAUDE.md` and leaves everything else there alone.

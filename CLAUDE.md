@@ -1,4 +1,4 @@
-# bitácora
+# bitacora
 
 A scaffolder that installs a structured logbook into a project, so a coding
 agent stops losing what it learned when the session ends. Published as
@@ -62,33 +62,46 @@ The command scaffolds the entry and assigns the id. Then fill the
 ## Commands
 
 ```bash
-node test/smoke.mjs                        # this is the test suite. It must pass.
+node test/smoke.mjs                                 # this is the test suite. It must pass.
 node bin/create-bitacora.mjs --yes --dir /tmp/try   # try the installer somewhere disposable
-node .bitacora/cli.mjs doctor              # is this repo's own logbook healthy?
+node .bitacora/cli.mjs doctor                       # is this repo's own logbook healthy?
+npm run sync:self                                   # after editing anything under template/
 ```
 
 There is no build step and no lint config. `node --check` on both scripts plus
 `node test/smoke.mjs` is the whole gate.
+
+**This repo uses its own system**, so the operational files exist twice: in
+`template/` as the shipped payload, and at the root as this project's installed
+copy. Edit `template/`, then `npm run sync:self`. Never run the installer with
+`--force` at the root — it would overwrite this project's real `CLAUDE.md`,
+`STATE.md` and logs with template placeholders. CI checks the two are in sync.
 
 ## Changing the template
 
 Editing anything under `template/` changes what every future user gets, and
 `test/smoke.mjs` asserts against the real thing. In particular:
 
-- A new `{{PLACEHOLDER}}` needs a matching key in `collect()` in the installer,
-  or it ships to users unsubstituted. The smoke test asserts no `{{...}}`
-  survives.
+- A new `{{PLACEHOLDER}}` needs a matching key in `collect()` *and* a decision
+  about its class: `COMMAND_VARS` (the whole line is dropped when the project
+  has no such command) or `PROSE_HINTS` (an empty value becomes a `fill-me`
+  block that `doctor` will demand). See D-0005.
+- A command placeholder may only appear inside a fenced code block. Inside a
+  numbered list, dropping its line renumbers the list.
 - A new required file needs adding to `required` in `bitacora.config.json`
   *and* to the existence assertion in the smoke test.
-- Prose in the templates may quote the entry marker — it does, on purpose, in
-  `DECISIONS.md`. The parser is line-anchored so that this is safe. Do not
-  "simplify" that back to `indexOf` (see M-0001).
+- Prose in the templates quotes bitacora's own markers, on purpose. Keep them
+  in backticks: `withoutCode()` strips code spans before any marker scan, which
+  is the general form of the M-0001 and M-0006 failure. Do not reintroduce a
+  raw `indexOf` or a raw `.test()` against entry text.
 
 ## Before closing a session
 
 1. `node test/smoke.mjs` passes.
 2. `STATE.md` reflects reality, and its `updated:` line is today.
-3. Anything that broke is in `MISTAKES.md`, with a guardrail — not just a description.
+3. Anything that broke is in `MISTAKES.md`, with a guardrail — not just a
+   description. The `log-mistake` skill covers the difference, and `doctor`
+   enforces it.
 4. `node .bitacora/cli.mjs doctor` is green.
 
 ## What not to do
