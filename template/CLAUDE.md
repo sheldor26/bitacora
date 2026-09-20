@@ -1,0 +1,75 @@
+# {{PROJECT_NAME}}
+
+{{ONE_LINE_DESCRIPTION}}
+
+## Stack in one line
+
+{{STACK}} — details in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## Non-negotiables
+
+1. **No new dependency without asking.** If you think one is needed, stop and say why.
+2. **Simple beats clever.** Two ways to do it? Take the obvious one. Do not abstract for a future that has not arrived.
+3. **Do not touch the base stack silently.** Build config, tsconfig, package manifests, CI, headers — say what and why first.
+4. **Do not commit unless asked.** Show the diff and wait.
+5. **Do not clean up code unrelated to the task at hand.**
+
+## The loop
+
+This project keeps a logbook. It is not documentation — it is working memory
+that survives between sessions.
+
+| File | What it holds | When you touch it |
+| :-- | :-- | :-- |
+| [STATE.md](STATE.md) | Where the project is *right now*. A snapshot, not a diary. | End of every session |
+| [MISTAKES.md](MISTAKES.md) | Something broke. What, why, and the guardrail that stops it recurring. | The moment it happens |
+| [LEARNINGS.md](LEARNINGS.md) | Something worked unusually well and is worth reusing. | The moment it happens |
+| [DECISIONS.md](DECISIONS.md) | A choice made, with the alternatives considered. | When the choice is made |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How the thing is built and why. | When the shape changes |
+
+**Read before you write.** Before touching an unfamiliar area, pull the
+relevant history instead of reading whole files:
+
+```bash
+node .bitacora/cli.mjs recall <tag>        # e.g. recall auth, recall pricing, recall deploy
+node .bitacora/cli.mjs stats               # where the recurring friction is
+```
+
+This is deliberate. The logs are never `@`-imported into this file: an
+`@MISTAKES.md` would burn thousands of tokens on every session for history
+that is irrelevant 90% of the time. Retrieve by tag, pay only for what you use.
+
+**Write as you go.** Do not save it for the end of the session:
+
+```bash
+node .bitacora/cli.mjs new mistake  "Short, specific title" --tags area,failure-mode --severity high
+node .bitacora/cli.mjs new learning "Short, specific title" --tags area
+node .bitacora/cli.mjs new decision "Short, specific title" --tags area
+```
+
+The command scaffolds the entry and assigns the id. Then fill the
+`bitacora:fill-me` blocks in full prose — `doctor` fails while any remain.
+
+## Commands
+
+```bash
+{{DEV_COMMAND}}                            # run it locally
+{{BUILD_COMMAND}}                          # this is the test: it must pass before a session ends
+{{TEST_COMMAND}}                           # <!-- bitacora:fill-me or delete this line if there is no test suite -->
+node .bitacora/cli.mjs doctor              # is the logbook healthy?
+```
+
+## Before closing a session
+
+1. `{{BUILD_COMMAND}}` passes.
+2. `STATE.md` reflects reality, and its `updated:` line is today.
+3. Anything that broke is in `MISTAKES.md`, with a guardrail — not just a description.
+4. `node .bitacora/cli.mjs doctor` is green.
+
+## What not to do
+
+- No `git push`, no `--force`, no branch deletion unless asked explicitly.
+- No emojis in code or files unless asked.
+- No new `.md` files at the repo root. The logbook has a place for everything;
+  if something genuinely has no place, say so instead of inventing a file.
+- Do not mock behaviour that can be tested against real data.

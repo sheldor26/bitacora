@@ -1,0 +1,42 @@
+{
+  "name": "create-bitacora",
+  "version": "0.1.0",
+  "description": "The logbook your coding agent keeps. Memory that survives between sessions without eating your context window.",
+  "type": "module",
+  "bin": {
+    "create-bitacora": "bin/create-bitacora.mjs"
+  },
+  "files": [
+    "bin",
+    "template",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "agentic-coding",
+    "context-engineering",
+    "scaffolding",
+    "adr",
+    "postmortem",
+    "developer-experience"
+  ],
+  "license": "MIT",
+  "author": "Juan Mirande",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/USERNAME/bitacora.git"
+  },
+  "homepage": "https://github.com/USERNAME/bitacora#readme",
+  "bugs": {
+    "url": "https://github.com/USERNAME/bitacora/issues"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "logbook": "node .bitacora/cli.mjs"
+  }
+}
