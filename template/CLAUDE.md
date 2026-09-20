@@ -13,6 +13,10 @@
 3. **Do not touch the base stack silently.** Build config, tsconfig, package manifests, CI, headers — say what and why first.
 4. **Do not commit unless asked.** Show the diff and wait.
 5. **Do not clean up code unrelated to the task at hand.**
+6. **Write the record in {{RECORD_LANGUAGE}}.** Talk with me in whatever
+   language I use, but `CLAUDE.md`, the logbook, code comments and commit
+   messages are written in {{RECORD_LANGUAGE}}. They outlive the conversation
+   and are read by people who were not in it.
 
 ## The loop
 

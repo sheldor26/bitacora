@@ -127,6 +127,31 @@ try {
     assert(cli(withTests, 'doctor').code === 0, cli(withTests, 'doctor').out);
   });
 
+  check('states the language of the record, so the agent does not pick one', () => {
+    // Without this line the agent writes in the language of the conversation,
+    // and a repository ends up half English and half something else (M-0011).
+    const t = readFileSync(join(app, 'CLAUDE.md'), 'utf8');
+    assert(/Write the record in English/.test(t), 'CLAUDE.md never says what language the record is written in');
+    assert(/outlive the conversation/.test(t), 'the convention is stated without the reason, so it reads as arbitrary');
+  });
+
+  check('ignores the placeholder test script that npm init writes', () => {
+    // `npm init -y` ships `echo "Error: no test specified" && exit 1`. A
+    // CLAUDE.md that advertises it sends the agent to a command that always
+    // fails (M-0010).
+    const stub = temp('stub');
+    writeFileSync(
+      join(stub, 'package.json'),
+      JSON.stringify({ name: 'stub-app', version: '1.0.0', scripts: { test: 'echo "Error: no test specified" && exit 1' } }, null, 2)
+    );
+    assert(install(stub).code === 0, 'installer failed');
+    const t = readFileSync(join(stub, 'CLAUDE.md'), 'utf8');
+    assert(!/# test suite/.test(t), 'advertised the npm-init stub as a real test command');
+    assert(!/no test specified/.test(t), 'leaked the stub script into CLAUDE.md');
+    fillPlaceholders(stub);
+    assert(cli(stub, 'doctor').code === 0, cli(stub, 'doctor').out);
+  });
+
   check('works in a project with no package.json at all', () => {
     const bare = temp('bare');
     writeFileSync(join(bare, 'main.go'), 'package main\n');

@@ -28,7 +28,7 @@ updated: 2026-09-20
 - `--global` / `--global --remove` — a `start-project` skill and a
   sentinel-delimited rule in `~/.claude/CLAUDE.md`, so Claude Code applies the
   logbook to new projects on its own. Idempotent; honours `CLAUDE_CONFIG_DIR`.
-- `test/smoke.mjs` — 47 end-to-end assertions against the real installer in
+- `test/smoke.mjs` — 49 end-to-end assertions against the real installer in
   real temp directories, across three fixture shapes (with tests, without
   tests, no `package.json`). No test framework.
 - `scripts/sync-self.mjs` (`npm run sync:self`) — this repo uses its own
@@ -58,17 +58,15 @@ updated: 2026-09-20
 
 ## In flight
 
-Nothing. The next move is publication, not code.
+Nothing. 0.1.1 is ready to publish: it fixes M-0010 and M-0011, both found by
+installing the published 0.1.0 into a real new project. One day of real use,
+two high-severity defects — neither reachable by reading this repo's code.
 
 ## Next
 
-1. `npm publish` as `create-bitacora`, so `npm create bitacora@latest`
-   resolves. Until then `--global` runs from this checkout:
-   `node bin/create-bitacora.mjs --global`.
-2. Push to `github.com/sheldor26/bitacora`. The README's CI badge and the
-   suggested consumer badge both point there already.
-3. Use it on the next real project from day one, and let that project's logbook
-   be the proof in the README.
+1. Publish 0.1.1.
+2. Keep using it on real projects. 0.1.0 survived one day of real use and
+   produced one high-severity defect, which is the rate to expect for a while.
 
 ## Known rough edges
 

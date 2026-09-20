@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- Fixed: a project created with `npm init -y` got a `CLAUDE.md` advertising
+  `npm run test`, which is the stub npm writes to always fail. Detection now
+  ignores it (`M-0010`), found by using the published package on a real project.
+- Added: `CLAUDE.md` now states the language the logbook and docs are written
+  in, defaulting to English and prompted for on an interactive install. Without
+  it the agent writes in the language of the conversation and the repository
+  ends up bilingual (`M-0011`).
+
 ## 0.1.0 — unreleased
 
 First release.
@@ -39,6 +49,6 @@ without being asked; `--global --remove` undoes exactly that and nothing else.
 `Stop` hook that reports through JSON `systemMessage` with exit 0. It never
 blocks a stop.
 
-**Testing** — 47 end-to-end assertions in `test/smoke.mjs`, no framework. CI on
+**Testing** — 49 end-to-end assertions in `test/smoke.mjs`, no framework. CI on
 Node 18/20/22, plus hook syntax, this repository's own `doctor`, a
 template-versus-root drift check, and an install from a packed tarball.

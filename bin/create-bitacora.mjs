@@ -216,13 +216,23 @@ function guessStack() {
   return hits.join(' + ');
 }
 
+// `npm init -y` writes a test script whose only behaviour is to fail. Treating
+// it as a real command puts a broken instruction in CLAUDE.md — and the agent
+// then follows it, because the file is the thing it trusts. See M-0010.
+const PLACEHOLDER_SCRIPT = /no test specified/i;
+const script = (name) => (scripts[name] && !PLACEHOLDER_SCRIPT.test(scripts[name]) ? `${runner} ${name}` : '');
+
 const detected = {
   PROJECT_NAME: (pkg && pkg.name) || TARGET.split('/').filter(Boolean).pop() || 'Project',
   ONE_LINE_DESCRIPTION: (pkg && pkg.description) || '',
   STACK: guessStack(),
-  DEV_COMMAND: scripts.dev ? `${runner} dev` : scripts.start ? `${runner} start` : '',
-  BUILD_COMMAND: scripts.build ? `${runner} build` : '',
-  TEST_COMMAND: scripts.test ? `${runner} test` : '',
+  DEV_COMMAND: script('dev') || script('start'),
+  BUILD_COMMAND: script('build'),
+  TEST_COMMAND: script('test'),
+  // The language of the permanent record is a decision nobody makes out loud,
+  // so the agent defaults to the language of the conversation and the repo ends
+  // up bilingual. Stating it costs one line and settles it forever (M-0011).
+  RECORD_LANGUAGE: 'English',
 };
 
 // ---------------------------------------------------------------- prompting
@@ -244,6 +254,7 @@ async function collect() {
     DEV_COMMAND: await ask('Run it locally', detected.DEV_COMMAND),
     BUILD_COMMAND: await ask('Build / typecheck', detected.BUILD_COMMAND),
     TEST_COMMAND: await ask('Test suite (blank if none)', detected.TEST_COMMAND),
+    RECORD_LANGUAGE: await ask('Language for the logbook and docs', detected.RECORD_LANGUAGE),
   };
   rl.close();
   return out;

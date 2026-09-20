@@ -40,6 +40,11 @@ logbook is worse than none, because it gets read and trusted.
 Read the codebase first, then write. Do not interview the user for anything the
 repository already answers.
 
+- **The language of the record.** The installer defaults to English. Confirm it
+  with the user, because the default answer is wrong for plenty of projects and
+  because an agent otherwise writes in whatever language the conversation is in
+  — which produces a repository half in one language and half in another. Ask
+  once, here, and never again.
 - **`CLAUDE.md`** — the non-negotiables. The template ships with generic ones;
   replace them with the rules that are actually true here. Ask the user for the
   two or three constraints that are not visible in the code: what must never be

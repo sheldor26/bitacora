@@ -8,6 +8,72 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0011
+date: 2026-09-20
+tags: [templates, conventions, claude-code]
+severity: high
+files: [template/CLAUDE.md]
+-->
+### The first real project came out half English, half Spanish
+
+**What happened.** The first project scaffolded with the published package came
+out bilingual. The scaffolding was English, because it comes from the template;
+every word the agent wrote was Spanish — 159 Spanish words in `DECISIONS.md`,
+31 in `ARCHITECTURE.md`, 23 in `STATE.md`, and Spanish comments in three source
+files. For a public repository aimed at an international audience that is the
+worst of both options: it reads as unfinished to everyone.
+
+**Root cause.** The template never stated what language the record is written
+in. Being written in English is a signal, but a weak one, and it loses to the
+strongest signal an agent has: the language of the conversation it is in. An
+unstated convention is not a convention — it is a preference the author holds
+and nobody else can see. The same class as M-0009: the design was correct in the
+author's head and absent from the artifact.
+
+**Guardrail.** `RECORD_LANGUAGE` is now a filled variable, defaulting to English
+and prompted for on an interactive install, written into the non-negotiables
+where the agent reads it every session — with the reason attached, because a
+rule without a reason is the first one dropped under pressure. A smoke assertion
+fails if the line or its reason disappears from the template.
+
+Honest limit: this is a stated convention, not an enforced check. `doctor` could
+not detect language cheaply or reliably, and a detector with false positives on
+a technical term or a proper noun would be worse than none. What is enforced is
+that the instruction is present and reasoned, which is most of what makes an
+instruction followed.
+
+<!-- bitacora:entry
+id: M-0010
+date: 2026-09-20
+tags: [installer, detection, claude-code]
+severity: high
+files: [bin/create-bitacora.mjs]
+-->
+### CLAUDE.md advertised a test command that only fails
+
+**What happened.** The first real project scaffolded with the published package
+— `predeploy`, started with `npm init -y` — got a `CLAUDE.md` whose commands
+block read `npm run test  # test suite`. That script is the stub `npm init`
+writes: `echo "Error: no test specified" && exit 1`. Its entire behaviour is to
+fail. So the file the agent trusts most told it to run a command that always
+errors, and the session-close checklist pointed at the same command.
+
+**Root cause.** Detection treated the *presence* of a `scripts.test` key as
+evidence that a test command exists. For `npm init -y` — the single most common
+starting state for a Node project, and therefore the most common state for a
+project someone installs a logbook into on day one — presence means the
+opposite: the key exists precisely because there is no test suite. The check was
+written against the manifest rather than against what the manifest means.
+
+**Guardrail.** The installer now ignores a script matching `/no test specified/`
+and a smoke assertion installs into an `npm init -y` fixture, failing if any
+test line reaches `CLAUDE.md`. The wider rule, which is the part worth keeping:
+**anything detected from a manifest and then written as an instruction gets
+checked against the known lying case first.** A manifest describes intent, not
+capability, and an instruction that is wrong is worse than one that is missing —
+the agent follows it.
+
+<!-- bitacora:entry
 id: M-0009
 date: 2026-09-20
 tags: [skills, workflow, design]
