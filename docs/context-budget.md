@@ -28,6 +28,12 @@ is about 5k tokens if it were ever loaded whole — which is exactly the thing
 the design avoids. The budget is not there to make loading cheap; it is there so
 `recall` stays fast to read and the file stays reviewable by a human.
 
+One caveat worth knowing: it measures lines, so a paragraph written as a single
+unwrapped line counts as one. For hand-written markdown wrapped at 80 columns —
+which is what both people and models produce — lines track length closely
+enough. For a file of unwrapped walls of text they do not, and the budget will
+let it through.
+
 ## `maxLines: 400` for a mistakes log
 
 A good mistake entry is 15–20 lines. Twenty of them plus a header is around 400.

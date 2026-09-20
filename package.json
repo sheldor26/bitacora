@@ -1,6 +1,6 @@
 {
   "name": "create-bitacora",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The logbook your coding agent keeps. Memory that survives between sessions without eating your context window.",
   "type": "module",
   "bin": {

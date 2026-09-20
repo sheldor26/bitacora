@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- Fixed: `rotate` only retired entries once a log passed `keepEntries`, so a log
+  of normal-length entries hit its line budget while `rotate` stayed inert. It
+  now archives until the file fits, on whichever budget binds first (`M-0012`).
+- The near-budget warning says what `rotate` will and will not do.
+
 ## 0.1.1
 
 - Fixed: a project created with `npm init -y` got a `CLAUDE.md` advertising
@@ -49,6 +56,6 @@ without being asked; `--global --remove` undoes exactly that and nothing else.
 `Stop` hook that reports through JSON `systemMessage` with exit 0. It never
 blocks a stop.
 
-**Testing** — 49 end-to-end assertions in `test/smoke.mjs`, no framework. CI on
+**Testing** — 50 end-to-end assertions in `test/smoke.mjs`, no framework. CI on
 Node 18/20/22, plus hook syntax, this repository's own `doctor`, a
 template-versus-root drift check, and an install from a packed tarball.

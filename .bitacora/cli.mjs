@@ -25,6 +25,7 @@ const SEVERITIES = ['low', 'medium', 'high'];
 const RECALL_FULL = 5;          // entries printed in full before falling back to an index
 const MIN_SECTION_CHARS = 40;   // below this, a section is a gesture rather than a thought
 const RECENT_DAYS = 90;
+const MIN_KEEP = 3;             // a log with fewer live entries than this is not a log
 
 const DEFAULTS = {
   version: 1,
@@ -232,11 +233,14 @@ function doctor(cfg, args) {
     const n = t.split('\n').length;
     if (n > spec.maxLines) {
       errors.push(
-        `${file} is ${n} lines, budget is ${spec.maxLines} — run "rotate"` +
-          ` (if it is already at ${plural(spec.keepEntries, 'entry')}, lower keepEntries or raise maxLines in bitacora.config.json)`
+        `${file} is ${n} lines, budget is ${spec.maxLines} — run "rotate", which archives from the bottom until it fits` +
+          ` (if it is already down to ${plural(MIN_KEEP, 'entry')}, raise maxLines in bitacora.config.json instead)`
       );
     } else if (n > spec.maxLines * 0.85) {
-      warnings.push(`${file} is at ${Math.round((n / spec.maxLines) * 100)}% of its ${spec.maxLines}-line budget`);
+      warnings.push(
+        `${file} is at ${Math.round((n / spec.maxLines) * 100)}% of its ${spec.maxLines}-line budget` +
+          ' — rotate starts archiving from the bottom once it crosses, and does nothing before that'
+      );
     }
   }
 
@@ -480,13 +484,24 @@ function rotate(cfg, args) {
     const text = read(file);
     if (text === null) continue;
     const { head, entries, tail } = parseEntries(text);
-    if (entries.length <= spec.keepEntries) continue;
 
     // Defensive: doctor enforces newest-first, so this sort is normally a
     // no-op. It stops a hand-inserted entry from being archived by position.
     const ordered = [...entries].sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    const keep = ordered.slice(0, spec.keepEntries);
-    const retire = ordered.slice(spec.keepEntries);
+
+    // Two budgets, and the line budget is the one that bites first: entries
+    // long enough to be worth keeping blow through maxLines well before they
+    // reach keepEntries. Retire on whichever binds (M-0012).
+    const lines = (n) =>
+      (head + ordered.slice(0, n).map((e) => e.raw).join('') + `\n${ARCHIVE_HEADING}\n\n\n\n` + '-\n'.repeat(ordered.length - n))
+        .split('\n').length;
+
+    let keepCount = Math.min(ordered.length, spec.keepEntries);
+    while (keepCount > MIN_KEEP && lines(keepCount) > spec.maxLines) keepCount--;
+    if (keepCount >= ordered.length) continue;
+
+    const keep = ordered.slice(0, keepCount);
+    const retire = ordered.slice(keepCount);
 
     const byYear = new Map();
     for (const e of retire) {

@@ -9,6 +9,35 @@
 > Add entries with: `node .bitacora/cli.mjs new decision "Title" --tags area`
 
 <!-- bitacora:entry
+id: D-0007
+date: 2026-09-20
+tags: [scope, skills]
+-->
+### No synthesis command until a real logbook asks for one
+
+**Context.** Warp's self-improvement loop has a step this project does not:
+synthesis. They take a batch of feedback, generalise it, and improve the skill.
+`stats` gestures at the same idea — "the top tag is usually one missing
+abstraction, told n times" — and then does nothing about it. The proposal was a
+fifth skill: when a tag reaches five entries, read them all and propose the
+abstraction.
+
+**Decision.** Not building it. Revisit when a real logbook, in a project that is
+not this one, has a tag with enough entries that a person actually wants help
+generalising them.
+
+**Consequences.** `stats` keeps offering an interpretation without acting on it,
+and that is acceptable: it is analysis handed to a person who then decides, not
+a mechanism promised and missing — the distinction the Guardrail rule turns on,
+and one this project briefly blurred when it proposed the feature. Against
+building it: no logbook anywhere has hit that threshold except this one, where
+the missing abstractions are already known because the same person wrote the
+guardrails; every skill's description is loaded into the system prompt of every
+session forever, so a fifth one is a permanent cost for a rare event; and the
+evidence was a single webinar and zero users. The cost of waiting is that the
+idea has to be re-derived later, which this entry exists to prevent.
+
+<!-- bitacora:entry
 id: D-0006
 date: 2026-09-20
 tags: [hooks, claude-code]

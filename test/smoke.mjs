@@ -394,6 +394,38 @@ try {
     assert(r.code === 1 && /budget is 400/.test(r.out) && /rotate/.test(r.out), r.out);
   });
 
+  check('rotate archives on the line budget, not only the entry count', () => {
+    // Entries long enough to be worth keeping blow through maxLines well
+    // before they reach keepEntries, so rotate on entry count alone is inert
+    // exactly when it is needed (M-0012).
+    const p = project();
+    // Wrapped prose, because the budget counts lines: one very long line is
+    // still one line.
+    const para = Array.from({ length: 10 }, () => 'A line of real prose, wrapped the way hand-written markdown wraps.').join('\n');
+    const entry = (n, date) =>
+      ['<!-- bitacora:entry', `id: M-${String(n).padStart(4, '0')}`, `date: ${date}`, 'tags: [budget]', 'severity: low', '-->',
+       `### Long entry number ${n}`, '', `**What happened.** ${para}`, '', `**Root cause.** ${para}`, '', `**Guardrail.** ${para}`, '', ''].join('\n');
+    const dates = (n) => `2026-0${1 + Math.floor(n / 28)}-${String((n % 28) + 1).padStart(2, '0')}`;
+    const many = Array.from({ length: 12 }, (_, i) => entry(200 - i, dates(200 - i - 150)))
+      .sort((a, b) => (a.match(/date: (\S+)/)[1] < b.match(/date: (\S+)/)[1] ? 1 : -1))
+      .join('');
+    editIn(p, 'MISTAKES.md', (t) => t.slice(0, t.indexOf('<!-- bitacora:entry')) + many);
+
+    const lines = readIn(p, 'MISTAKES.md').split('\n').length;
+    const count = (readIn(p, 'MISTAKES.md').match(/^<!-- bitacora:entry/gm) || []).length;
+    assert(lines > 400, `fixture is only ${lines} lines, it must exceed the budget`);
+    assert(count < 20, `fixture has ${count} entries, it must stay under keepEntries`);
+
+    assert(cli(p, 'doctor').code === 1, 'doctor did not fail on an over-budget log');
+    const r = cli(p, 'rotate');
+    assert(/moved/.test(r.out), `rotate did nothing on an over-budget log:\n${r.out}`);
+    const after = readIn(p, 'MISTAKES.md').split('\n').length;
+    assert(after <= 400, `still ${after} lines after rotate`);
+    assert(/## Archived/.test(readIn(p, 'MISTAKES.md')), 'no archive index');
+    const d = cli(p, 'doctor');
+    assert(d.code === 0, `doctor still failing after rotate:\n${d.out}`);
+  });
+
   check('rotate --dry-run changes nothing', () => {
     const before = readIn(flooded, 'MISTAKES.md');
     cli(flooded, 'rotate', '--dry-run');

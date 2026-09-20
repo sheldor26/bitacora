@@ -9,6 +9,39 @@
 > Add entries with: `node .bitacora/cli.mjs new learning "Title" --tags area`
 
 <!-- bitacora:entry
+id: L-0007
+date: 2026-09-20
+tags: [positioning, research]
+-->
+### The industry has two boxes for agent knowledge, and this is the third
+
+**What worked.** Reading how the platform and a serious dev-tool company each
+draw the line between skills and memory, and noticing that this project sits in
+neither category on purpose.
+
+**Why it worked.** Anthropic's framing is that skills are stable and universal —
+"the North Star of skills is that they don't change" — while memory is "ever
+changing, the agent is constantly editing and writing to it". Warp describes
+memory the same way: "auto creation... the agent itself discerning what is
+important." A logbook is neither: its contents change constantly, like memory,
+while its structure and its bar for entry never change, like a skill.
+
+That reframing is worth more than the validation, because it names the gap
+precisely. Three independent sources arrive at the same dependency from
+different directions — the cookbook's "memory's value depends on the agent's
+judgment about what to write", the Claude Code team's "model-curated, so not a
+context engineering primitive", and Warp's observation that a thumbs-up "doesn't
+tell the agent what was good about this versus what wasn't". Every one of them
+names the dependency on judgment; none supplies it. Saying what this project is
+became easy once that was written down: it is the judgment, made mechanical.
+
+**Reuse it when.** A category has established names and your thing does not fit
+them. The instinct is to claim the nearest label; the better move is to describe
+the two boxes accurately, in their owners' words, and then say plainly which
+property of each you took. It reads as precision rather than positioning,
+because it is.
+
+<!-- bitacora:entry
 id: L-0006
 date: 2026-09-20
 tags: [positioning, docs]

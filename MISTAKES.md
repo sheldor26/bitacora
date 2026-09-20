@@ -8,6 +8,37 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0012
+date: 2026-09-20
+tags: [rotate, budgets, design]
+severity: high
+files: [.bitacora/cli.mjs]
+-->
+### rotate was inert in exactly the case it existed for
+
+**What happened.** `doctor` warned that `MISTAKES.md` was at 90% of its 400-line
+budget. `rotate` — the command that warning points at — answered "nothing to
+rotate: every log is within its entry budget" and did nothing. Asked to compact,
+the tool's own compaction was a no-op.
+
+**Root cause.** Two budgets invented for two different reasons and never checked
+against each other. `maxLines` guards readability and drives the warning and the
+error; `keepEntries` decides what `rotate` retires. Entries in this repo average
+33 lines, so 20 of them is roughly 660 lines — the line budget is blown long
+before the entry count is reached, and `rotate` is therefore inert in precisely
+the situation it exists for. The defaults shipped contradicting each other, and
+the only way to notice is to accumulate real entries at a realistic length,
+which takes weeks of use or one very long day.
+
+**Guardrail.** `rotate` now retires from the bottom until the file fits its line
+budget, down to a floor of three live entries, on whichever budget binds first.
+A smoke assertion builds a log that is over `maxLines` and under `keepEntries` —
+the exact inert case — and fails unless `rotate` archives and `doctor` comes
+back green; that path had never executed before the test forced it. The
+near-budget warning now says rotate archives once the limit is crossed and does
+nothing before, so it stops implying a fix that would not fire.
+
+<!-- bitacora:entry
 id: M-0011
 date: 2026-09-20
 tags: [templates, conventions, claude-code]

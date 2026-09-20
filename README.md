@@ -273,14 +273,35 @@ what decides whether it works six months in:
 
 Follow the advice. This is the shape that survives the second year of it.
 
+## Skills, memory, and the thing in between
+
+Anthropic draws the line this way, in a Claude Academy session on building
+self-improving agents: **skills** are stable and universal — "the North Star of
+skills is that they don't change... something that applies everywhere" — while
+**memory** is "ever changing, the agent is constantly editing and writing to
+it." Warp, building the same loop into their terminal, describes memory
+identically: "auto creation... the agent itself discerning what is important."
+
+Two boxes, and a logbook fits neither. Its contents change constantly, like
+memory. Its structure and its bar for entry do not change at all, like a skill.
+
+That gap is where every source lands, arriving from different directions. The
+Claude cookbook: "memory's value depends on the agent's judgment about what to
+write." The Claude Code team: model-curated files are not a context engineering
+primitive. Warp: the loop needs feedback specific enough to generalise from, and
+a thumbs-up "doesn't tell the agent what was good about this versus what wasn't."
+
+Everyone names the dependency on judgment. Nobody supplies it. That is the whole
+of what bitacora adds: required sections, a **Guardrail** that has to name a
+mechanism rather than an intention, a budget, a retrieval interface, and a
+`doctor` that fails the build when any of it rots.
+
 ## But Claude Code already has memory
 
 It does, and you should use it. Claude Code keeps **auto memory** per
 repository at `~/.claude/projects/<project>/memory/` — notes Claude writes for
-itself about your preferences, the corrections you give it, and ongoing project
-context. It is on by default and it is genuinely useful.
-
-It is also not this, in three ways that decide the question:
+itself. It is on by default and it is genuinely useful. Three practical
+differences decide when it is not enough:
 
 **It lives outside your repository.** Not in version control, not in a pull
 request, not visible to a teammate, not readable by a different agent or a
