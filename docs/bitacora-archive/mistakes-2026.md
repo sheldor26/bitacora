@@ -54,3 +54,34 @@ example entry in the `DECISIONS.md` template permanently, so any regression in
 the anchoring fails `test/smoke.mjs` at the "doctor passes once filled"
 assertion rather than reaching a user.
 
+<!-- bitacora:entry
+id: M-0003
+date: 2026-09-20
+tags: [tooling, shell]
+severity: medium
+files: [DECISIONS.md]
+-->
+### An unquoted heredoc let the shell expand backticks inside the payload
+
+**What happened.** A documentation edit was applied by piping a Python script
+into `python3` with `<<PYEOF` instead of `<<'PYEOF'`. Bash therefore expanded
+the heredoc before Python ever saw it, running every backtick span in the prose
+as a command substitution and replacing it with the (empty) output. The new
+`D-0004` entry landed with every inline code span silently deleted —
+"**Context.** `--global` has to add a rule to `~/.claude/CLAUDE.md`" became
+"**Context.**  has to add a rule to ,". `doctor` passed, because the metadata
+was intact and prose quality is not something it can check.
+
+**Root cause.** The payload was markdown about a shell tool, so it was dense
+with backticks and `$`. An unquoted heredoc is safe only when the content has
+neither. The failure is silent by construction: substitution of a
+non-command yields empty output, not an error, so nothing fails loudly and the
+damage is only visible by reading the result.
+
+**Guardrail.** Quote the delimiter — `<<'EOF'` — in every heredoc whose body is
+not meant to be expanded, which is every heredoc in this repository. Where
+prose has to reach a script, write it to a file with its own quoted heredoc and
+have the script read that file, rather than embedding it in the script's source.
+And read back the region that was edited: `doctor` validates structure, never
+sense.
+

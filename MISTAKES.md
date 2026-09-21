@@ -8,6 +8,34 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0014
+date: 2026-09-21
+tags: [cli, template]
+severity: medium
+-->
+### Removing the shipped example entries has no supported path
+
+**What happened.** Adopting bitacora into a real project ends with deleting the three shipped
+example entries, and the CLI has no command for it. The deletion was done with
+a script that split the file on the entry marker — and DECISIONS.md D-0001
+contains that marker as prose inside a code span, describing the format. The
+split produced a phantom fourth part, the script kept it, and the file was left
+with an orphaned entry body. doctor caught it immediately: no id, no tags, no
+date, no sections.
+
+**Root cause.** Two causes that only bite together. The CLI can add an entry and retire an
+entry to the archive, but cannot remove one, so the first thing every adopter
+does is edit the file by hand. And the parser in the CLI is careful about
+markers inside code spans — withoutCode() exists precisely for this — while
+anything written outside the CLI is not. The template ships a trap and no tool
+to walk past it.
+
+**Guardrail.** Add a remove command to the CLI that deletes an entry by id through the same
+parser that doctor uses, and have the installer take --without-examples so a
+fresh install can start empty. Until it exists, the start-project skill must
+delete example entries with the CLI's own parse, never with a string split.
+
+<!-- bitacora:entry
 id: M-0013
 date: 2026-09-20
 tags: [global, trigger, claude-code]
@@ -337,41 +365,11 @@ guardrail, one for a missing section. More generally, the `sections` mechanism
 means any claim the templates make about entry structure is now enforced by the
 same code path rather than by hope.
 
-<!-- bitacora:entry
-id: M-0003
-date: 2026-09-20
-tags: [tooling, shell]
-severity: medium
-files: [DECISIONS.md]
--->
-### An unquoted heredoc let the shell expand backticks inside the payload
-
-**What happened.** A documentation edit was applied by piping a Python script
-into `python3` with `<<PYEOF` instead of `<<'PYEOF'`. Bash therefore expanded
-the heredoc before Python ever saw it, running every backtick span in the prose
-as a command substitution and replacing it with the (empty) output. The new
-`D-0004` entry landed with every inline code span silently deleted —
-"**Context.** `--global` has to add a rule to `~/.claude/CLAUDE.md`" became
-"**Context.**  has to add a rule to ,". `doctor` passed, because the metadata
-was intact and prose quality is not something it can check.
-
-**Root cause.** The payload was markdown about a shell tool, so it was dense
-with backticks and `$`. An unquoted heredoc is safe only when the content has
-neither. The failure is silent by construction: substitution of a
-non-command yields empty output, not an error, so nothing fails loudly and the
-damage is only visible by reading the result.
-
-**Guardrail.** Quote the delimiter — `<<'EOF'` — in every heredoc whose body is
-not meant to be expanded, which is every heredoc in this repository. Where
-prose has to reach a script, write it to a file with its own quoted heredoc and
-have the script read that file, rather than embedding it in the script's source.
-And read back the region that was edited: `doctor` validates structure, never
-sense.
-
 
 ## Archived
 
 Older entries, one line each. `recall` still searches them in full.
 
+- `M-0003` An unquoted heredoc let the shell expand backticks inside the payload — [tooling, shell] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0002` paste -d silently cycles through its delimiter list — [hooks, shell] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0001` The entry parser counted a quoted marker in prose as a real entry — [parser, docs, self-reference] → `docs/bitacora-archive/mistakes-2026.md`
