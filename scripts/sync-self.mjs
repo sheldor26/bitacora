@@ -22,9 +22,9 @@ const SYNCED = [
   '.claude/settings.json',
   '.claude/hooks/bitacora-session-start.sh',
   '.claude/hooks/bitacora-session-end.sh',
-  '.claude/skills/close-session.md',
-  '.claude/skills/log-mistake.md',
-  '.claude/skills/recall.md',
+  '.claude/skills/close-session/SKILL.md',
+  '.claude/skills/log-mistake/SKILL.md',
+  '.claude/skills/recall/SKILL.md',
 ];
 
 let changed = 0;

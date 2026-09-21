@@ -7,7 +7,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync, mkdirSync, readdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -98,7 +98,7 @@ try {
       'CLAUDE.md', 'ARCHITECTURE.md', 'STATE.md', 'MISTAKES.md', 'LEARNINGS.md', 'DECISIONS.md',
       'bitacora.config.json', '.bitacora/cli.mjs', '.claude/settings.json',
       '.claude/hooks/bitacora-session-start.sh', '.claude/hooks/bitacora-session-end.sh',
-      '.claude/skills/close-session.md', '.claude/skills/log-mistake.md', '.claude/skills/recall.md',
+      '.claude/skills/close-session/SKILL.md', '.claude/skills/log-mistake/SKILL.md', '.claude/skills/recall/SKILL.md',
     ]) {
       assert(existsSync(join(app, f)), `missing ${f}`);
     }
@@ -643,9 +643,9 @@ try {
       '.bitacora/cli.mjs',
       '.claude/hooks/bitacora-session-start.sh',
       '.claude/hooks/bitacora-session-end.sh',
-      '.claude/skills/close-session.md',
-      '.claude/skills/log-mistake.md',
-      '.claude/skills/recall.md',
+      '.claude/skills/close-session/SKILL.md',
+      '.claude/skills/log-mistake/SKILL.md',
+      '.claude/skills/recall/SKILL.md',
     ]) {
       assert(
         readFileSync(join(ROOT, 'template', rel), 'utf8') === readFileSync(join(ROOT, rel), 'utf8'),
@@ -653,6 +653,33 @@ try {
       );
     }
   });
+  check('every shipped skill is a directory containing SKILL.md with a description', () => {
+  // A loose .md file in .claude/skills/ is never discovered by Claude Code, so
+  // it can look installed and do nothing at all (M-0016).
+  const dir = join(ROOT, 'template', '.claude', 'skills');
+  const entries = readdirSync(dir);
+  assert(entries.length > 0, 'the template ships no skills at all');
+  for (const name of entries) {
+    assert(statSync(join(dir, name)).isDirectory(), `template/.claude/skills/${name} is a file; a skill must be a directory`);
+    const skill = join(dir, name, 'SKILL.md');
+    assert(existsSync(skill), `template/.claude/skills/${name}/ has no SKILL.md`);
+    const text = readFileSync(skill, 'utf8');
+    assert(text.startsWith('---\n'), `${name}/SKILL.md frontmatter is not on the first line, so the whole file is read as content`);
+    const front = text.slice(4, text.indexOf('\n---', 4));
+    const description = (front.match(/^description:[ \t]*(.+)$/m) || [])[1] || '';
+    assert(description.trim().length > 20, `${name}/SKILL.md has no usable description — that field is what decides when it fires`);
+    }
+  });
+
+  check('installing over a pre-directory layout removes the inert flat file', () => {
+  const dir = temp();
+  mkdirSync(join(dir, '.claude', 'skills'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'recall.md'), 'stale\n');
+  install(dir);
+  assert(!existsSync(join(dir, '.claude', 'skills', 'recall.md')), 'the old flat recall.md was left beside the new directory');
+    assert(existsSync(join(dir, '.claude', 'skills', 'recall', 'SKILL.md')), 'recall/SKILL.md was not installed');
+  });
+
 } finally {
   for (const d of temps) rmSync(d, { recursive: true, force: true });
 }

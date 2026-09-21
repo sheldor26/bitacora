@@ -348,6 +348,21 @@ for (const rel of files) {
   written.push(rel);
 }
 
+// Migrate an install from before skills were directories. A loose .md file in
+// .claude/skills/ is never discovered by Claude Code — a skill has to be a
+// directory containing SKILL.md — so the old copies were inert, and leaving
+// them beside the new directories only invites editing the wrong one (M-0016).
+const migrated = [];
+for (const rel of files) {
+  const m = rel.match(/^\.claude[/\\]skills[/\\]([^/\\]+)[/\\]SKILL\.md$/);
+  if (!m) continue;
+  const stale = join(TARGET, '.claude', 'skills', `${m[1]}.md`);
+  if (existsSync(stale)) {
+    rmSync(stale);
+    migrated.push(join('.claude', 'skills', `${m[1]}.md`));
+  }
+}
+
 // A convenience script, only if there is already a package.json to put it in.
 if (pkg) {
   pkg.scripts = pkg.scripts || {};
@@ -361,6 +376,7 @@ if (pkg) {
 console.log('');
 for (const f of written) console.log(`${c.green('+')} ${f}`);
 for (const f of skipped) console.log(`${c.yellow('·')} ${f} ${c.dim('already exists, left alone')}`);
+for (const f of migrated) console.log(`${c.green('-')} ${f} ${c.dim('removed: a loose .md in skills/ is never loaded as a skill')}`);
 
 console.log(`
 ${c.b('Installed.')} Three things, in order:
