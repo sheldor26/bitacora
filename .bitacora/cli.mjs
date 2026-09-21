@@ -489,12 +489,38 @@ function rotate(cfg, args) {
     // no-op. It stops a hand-inserted entry from being archived by position.
     const ordered = [...entries].sort((a, b) => String(b.date).localeCompare(String(a.date)));
 
+    // The index lines already in the file. Rebuilt from the ids it lists, so
+    // repeated rotates cannot duplicate a line.
+    const previous = tail
+      .split('\n')
+      .map((l) => ({ id: (l.match(/^- `([A-Z]-\d{4})`/) || [])[1], line: l }))
+      .filter((x) => x.id);
+
+    const archiveLine = (e) => {
+      const year = (e.date || today()).slice(0, 4);
+      const rel = `${cfg.archiveDir}/${kindOf(file)}s-${year}.md`;
+      return { id: e.id, line: `- \`${e.id}\` ${e.title} — [${e.tags.join(', ')}] → \`${rel}\`` };
+    };
+
+    const tailFor = (retire) => {
+      const index = [...retire.map(archiveLine), ...previous]
+        .filter((x, i, all) => all.findIndex((y) => y.id === x.id) === i);
+      return [
+        `\n${ARCHIVE_HEADING}`,
+        '',
+        'Older entries, one line each. `recall` still searches them in full.',
+        '',
+        ...index.map((x) => x.line),
+        '',
+      ].join('\n');
+    };
+
     // Two budgets, and the line budget is the one that bites first: entries
     // long enough to be worth keeping blow through maxLines well before they
-    // reach keepEntries. Retire on whichever binds (M-0012).
-    const lines = (n) =>
-      (head + ordered.slice(0, n).map((e) => e.raw).join('') + `\n${ARCHIVE_HEADING}\n\n\n\n` + '-\n'.repeat(ordered.length - n))
-        .split('\n').length;
+    // reach keepEntries. Retire on whichever binds (M-0012). The projection is
+    // the real rendered file, never an approximation of it (M-0017).
+    const render = (n) => head + ordered.slice(0, n).map((e) => e.raw).join('') + tailFor(ordered.slice(n));
+    const lines = (n) => render(n).split('\n').length;
 
     let keepCount = Math.min(ordered.length, spec.keepEntries);
     while (keepCount > MIN_KEEP && lines(keepCount) > spec.maxLines) keepCount--;
@@ -510,7 +536,6 @@ function rotate(cfg, args) {
       byYear.get(year).push(e);
     }
 
-    const fresh = [];
     for (const [year, group] of byYear) {
       const rel = `${cfg.archiveDir}/${kindOf(file)}s-${year}.md`;
       const target = join(ROOT, rel);
@@ -519,26 +544,10 @@ function rotate(cfg, args) {
         mkdirSync(dirname(target), { recursive: true });
         writeFileSync(target, (existsSync(target) ? readFileSync(target, 'utf8') : header) + group.map((e) => e.raw).join(''));
       }
-      for (const e of group) fresh.push({ id: e.id, line: `- \`${e.id}\` ${e.title} — [${e.tags.join(', ')}] → \`${rel}\`` });
       moved += group.length;
     }
 
-    // Rebuild the index from the ids it already lists, so repeated rotates
-    // cannot duplicate a line.
-    const previous = tail
-      .split('\n')
-      .map((l) => ({ id: (l.match(/^- `([A-Z]-\d{4})`/) || [])[1], line: l }))
-      .filter((x) => x.id);
-    const index = [...fresh, ...previous].filter((x, i, all) => all.findIndex((y) => y.id === x.id) === i);
-
-    const newTail = [
-      `\n${ARCHIVE_HEADING}`,
-      '',
-      'Older entries, one line each. `recall` still searches them in full.',
-      '',
-      ...index.map((x) => x.line),
-      '',
-    ].join('\n');
+    const newTail = tailFor(retire);
 
     if (!dry) writeFileSync(join(ROOT, file), head + keep.map((e) => e.raw).join('') + newTail);
     console.log(`${dry ? C.yellow('would move') : C.green('moved')} ${plural(retire.length, 'entry')} out of ${file}`);

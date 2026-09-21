@@ -118,3 +118,33 @@ guardrail, one for a missing section. More generally, the `sections` mechanism
 means any claim the templates make about entry structure is now enforced by the
 same code path rather than by hope.
 
+<!-- bitacora:entry
+id: M-0005
+date: 2026-09-20
+tags: [installer, templates, test-coverage]
+severity: medium
+files: [bin/create-bitacora.mjs]
+-->
+### A fill-me comment shipped to any project that had a test script
+
+**What happened.** `template/CLAUDE.md` had a commands block whose test line
+carried an inline `<!-- bitacora:fill-me or delete this line if there is no
+test suite -->`, and `fill()` removed that line only when `TEST_COMMAND` was
+empty. So a project *with* a test script got the command substituted correctly
+and kept the placeholder comment — and since `doctor` errors on any surviving
+`fill-me`, every Node project with tests would have installed the logbook and
+immediately failed its own health check with a confusing message.
+
+**Root cause.** The smoke test's fixture `package.json` had `dev` and `build`
+scripts but no `test` script, so the only path exercised was the one where the
+line gets deleted. A conditional with two branches had one branch covered, and
+the covered branch was the one the author happened to be thinking about.
+
+**Guardrail.** `fill()` no longer special-cases anything: a line containing a
+placeholder whose command does not exist in this project is dropped whole, for
+all three command variables, and the templates carry no instructional comments
+inside command blocks. The smoke test now installs into three different
+fixtures — with tests, without tests, and with no `package.json` at all — and
+asserts `doctor` reaches green in each. When a template decision depends on
+what a project has, every value of "what a project has" needs a fixture.
+

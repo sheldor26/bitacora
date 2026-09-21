@@ -8,6 +8,32 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0017
+date: 2026-09-21
+tags: [cli, rotate]
+severity: high
+-->
+### rotate went inert again because it measured an approximation
+
+**What happened.** doctor reported MISTAKES.md at 402 lines against a 400-line budget and rotate
+answered "nothing to rotate — every log is within its entry budget". The same
+standoff as M-0012, in a repository where M-0012 was supposedly fixed.
+
+**Root cause.** The M-0012 fix taught rotate to check the line budget, but it checked it
+against a sketch of the file rather than the file: head, plus the kept entries,
+plus a fixed four blank lines for the archive heading, plus one dash per entry
+being retired now. The archive index lines already in the file were not
+counted. Every previous rotation therefore widened the gap between the
+projection and reality, so the check drifted back to inert exactly as the
+archive grew — the failure returning through the fix that was meant to end it.
+
+**Guardrail.** rotate now renders the candidate file with the same code that writes it — one
+tailFor() used by both the projection and the write — and measures that string.
+An approximation of an output cannot disagree with the output if there is only
+one function producing it. The standing rule this generalises: a check on what
+a write will produce must call the writer, never re-describe it.
+
+<!-- bitacora:entry
 id: M-0016
 date: 2026-09-21
 tags: [skills, installer]
@@ -360,41 +386,12 @@ constantly — the first version of the helper missed that and the bug survived
 one more round. A smoke-test assertion keeps an entry whose prose quotes both
 markers, in backticks and soft-wrapped, and requires `doctor` to stay green.
 
-<!-- bitacora:entry
-id: M-0005
-date: 2026-09-20
-tags: [installer, templates, test-coverage]
-severity: medium
-files: [bin/create-bitacora.mjs]
--->
-### A fill-me comment shipped to any project that had a test script
-
-**What happened.** `template/CLAUDE.md` had a commands block whose test line
-carried an inline `<!-- bitacora:fill-me or delete this line if there is no
-test suite -->`, and `fill()` removed that line only when `TEST_COMMAND` was
-empty. So a project *with* a test script got the command substituted correctly
-and kept the placeholder comment — and since `doctor` errors on any surviving
-`fill-me`, every Node project with tests would have installed the logbook and
-immediately failed its own health check with a confusing message.
-
-**Root cause.** The smoke test's fixture `package.json` had `dev` and `build`
-scripts but no `test` script, so the only path exercised was the one where the
-line gets deleted. A conditional with two branches had one branch covered, and
-the covered branch was the one the author happened to be thinking about.
-
-**Guardrail.** `fill()` no longer special-cases anything: a line containing a
-placeholder whose command does not exist in this project is dropped whole, for
-all three command variables, and the templates carry no instructional comments
-inside command blocks. The smoke test now installs into three different
-fixtures — with tests, without tests, and with no `package.json` at all — and
-asserts `doctor` reaches green in each. When a template decision depends on
-what a project has, every value of "what a project has" needs a fixture.
-
 
 ## Archived
 
 Older entries, one line each. `recall` still searches them in full.
 
+- `M-0005` A fill-me comment shipped to any project that had a test script — [installer, templates, test-coverage] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0004` doctor did not enforce the Guardrail section the whole project argues for — [doctor, thesis, verification] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0003` An unquoted heredoc let the shell expand backticks inside the payload — [tooling, shell] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0002` paste -d silently cycles through its delimiter list — [hooks, shell] → `docs/bitacora-archive/mistakes-2026.md`
