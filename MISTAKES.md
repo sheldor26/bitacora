@@ -8,6 +8,36 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0016
+date: 2026-09-21
+tags: [skills, installer]
+severity: high
+-->
+### The three skills bitacora installs were never skills
+
+**What happened.** Every project bitacora has ever been installed into got three files —
+close-session.md, log-mistake.md, recall.md — written directly into
+.claude/skills/. A skill is a directory containing a file named SKILL.md, so a
+loose .md file beside those directories is never discovered. The three skills
+have never loaded, in any project, since the first release. Found by pointing
+agentdoctor at this repository on its first complete run, which reported the
+same finding in all four projects on the machine.
+
+**Root cause.** The layout was never checked against the documentation, because it looked
+right: the files are markdown, they are in a directory called skills, and
+nothing failed. A skill that does not load produces no error, no warning and no
+missing output — the agent simply carries on without it. The template was
+copied wholesale by the installer and the smoke tests asserted that the files
+were written, which they were, to a path that means nothing.
+
+**Guardrail.** Restructure the template to .claude/skills/<name>/SKILL.md with frontmatter
+carrying a description, add a smoke test asserting that every shipped skill is
+a directory containing SKILL.md with a non-empty description, and have the
+installer migrate an existing flat file rather than leaving it beside the new
+directory. Longer term: run agentdoctor in this repository's CI, which is the
+check that catches the whole family rather than this one instance.
+
+<!-- bitacora:entry
 id: M-0015
 date: 2026-09-21
 tags: [installer, global]
