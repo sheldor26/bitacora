@@ -1,12 +1,19 @@
 <!-- BEGIN:bitacora -->
 ## Starting or adopting a project
 
-Any project worth more than one session keeps a logbook. When starting a new
-project, or when asked to set up a repository that has no `bitacora.config.json`,
-follow the `start-project` skill before writing feature code.
+Any project worth more than one session keeps a logbook.
 
-Where a `bitacora.config.json` already exists: the logs are not `@`-imported, so
-read them on demand — `node .bitacora/cli.mjs recall <tag>` before touching an
-unfamiliar or risky area, and log mistakes the moment they happen rather than at
-the end of the session.
+**No `bitacora.config.json` in the repository?** Follow the `start-project`
+skill before writing feature code — when starting something new, and equally
+when the first request is a refactor, a migration, a cleanup before release, or
+anything else that will not finish in one sitting. Do not wait to be asked:
+being asked requires the person to already know the logbook exists, which is the
+thing this rule exists to replace. The skill asks before adopting a repository
+that has conventions of its own, so firing it is cheap and adoption is never
+silent.
+
+**Already has one?** The logs are not `@`-imported, so read them on demand —
+`node .bitacora/cli.mjs recall <tag>` before writing a plan for an unfamiliar or
+risky area, and log mistakes the moment they happen rather than at the end of
+the session.
 <!-- END:bitacora -->

@@ -1,6 +1,6 @@
 ---
 name: start-project
-description: Set up a new project, or adopt an existing one, with a bitacora logbook — the structured memory that survives between sessions. Use when starting a project from scratch, scaffolding a repo, or when a repository has no bitacora.config.json and the work will span more than one session.
+description: Set up a new project, or adopt an existing one, with a bitacora logbook — the structured memory that survives between sessions. Use when starting a project from scratch, scaffolding a repo, or before beginning any work that will span more than one session on a repository with no bitacora.config.json — a refactor, a migration, a cleanup before release, not only an explicit request to set one up.
 ---
 
 # Start a project with a logbook
