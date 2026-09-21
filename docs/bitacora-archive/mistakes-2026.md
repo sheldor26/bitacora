@@ -85,3 +85,36 @@ have the script read that file, rather than embedding it in the script's source.
 And read back the region that was edited: `doctor` validates structure, never
 sense.
 
+<!-- bitacora:entry
+id: M-0004
+date: 2026-09-20
+tags: [doctor, thesis, verification]
+severity: high
+files: [.bitacora/cli.mjs]
+-->
+### doctor did not enforce the Guardrail section the whole project argues for
+
+**What happened.** The README says "an entry without a guardrail is a
+complaint". `docs/the-loop.md` says it twice more. The `new` template prompts
+for it. And `doctor` never checked it: the only entry-body check was that no
+`bitacora:fill-me` placeholder survived. Deleting the placeholder and writing
+"**Guardrail.** Be more careful with prices." passed green. The single check
+the whole method rests on did not exist, in a tool whose entire pitch is that it
+turns a habit into a check.
+
+**Root cause.** The checks were written by asking "what can go structurally
+wrong with a markdown file" — missing file, bad id, unparseable date, over
+budget. Every one is mechanical and every one was easy. The claim that
+distinguishes this project from a folder of markdown files is a claim about
+*content quality*, which is harder to check, so it never got written and its
+absence was invisible: the documentation asserted it so confidently that
+re-reading the documentation confirmed it.
+
+**Guardrail.** Section presence and minimum real content are now checked per
+entry, per log, configurable via `sections` in `bitacora.config.json`, with
+`Guardrail` getting a message that says what a guardrail is rather than just
+that the section is short. Two smoke-test assertions pin it: one for a gestural
+guardrail, one for a missing section. More generally, the `sections` mechanism
+means any claim the templates make about entry structure is now enforced by the
+same code path rather than by hope.
+

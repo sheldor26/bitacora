@@ -8,6 +8,34 @@
 > Add entries with: `node .bitacora/cli.mjs new mistake "Title" --tags area,failure-mode`
 
 <!-- bitacora:entry
+id: M-0015
+date: 2026-09-21
+tags: [installer, global]
+severity: high
+-->
+### Refreshing the global install silently skipped the skill
+
+**What happened.** Re-running the global install to ship the M-0013 fix refreshed the CLAUDE.md
+block and left the skill alone, printing a dim note: "differs from this
+version, left alone". The line that differed was the skill's description — the
+field Claude Code matches to decide whether to load the skill at all. So the
+half of the fix that determines when the skill fires did not land, while the
+install reported Done.
+
+**Root cause.** "Differs from what we ship" was read as "the user edited this", but it is
+equally "this is an older copy of ours". The installer knows the version it
+ships and stamps nothing on what it writes, so it cannot tell an upgrade from a
+local edit — and having picked the conservative branch, it reported the outcome
+as a note rather than as a warning, below a success message.
+
+**Guardrail.** Stamp the installed skill with the version that wrote it, as a bitacora-version
+line in its frontmatter, and on --global overwrite without asking when the
+stamp is older than the shipping version. Keep the leave-it-alone branch only
+for a file matching no version this package ever shipped, which is the actual
+local edit. Until that lands, the skipped-skill line prints as a warning that
+names --force, not as a dim note.
+
+<!-- bitacora:entry
 id: M-0014
 date: 2026-09-21
 tags: [cli, template]
@@ -332,44 +360,12 @@ fixtures — with tests, without tests, and with no `package.json` at all — an
 asserts `doctor` reaches green in each. When a template decision depends on
 what a project has, every value of "what a project has" needs a fixture.
 
-<!-- bitacora:entry
-id: M-0004
-date: 2026-09-20
-tags: [doctor, thesis, verification]
-severity: high
-files: [.bitacora/cli.mjs]
--->
-### doctor did not enforce the Guardrail section the whole project argues for
-
-**What happened.** The README says "an entry without a guardrail is a
-complaint". `docs/the-loop.md` says it twice more. The `new` template prompts
-for it. And `doctor` never checked it: the only entry-body check was that no
-`bitacora:fill-me` placeholder survived. Deleting the placeholder and writing
-"**Guardrail.** Be more careful with prices." passed green. The single check
-the whole method rests on did not exist, in a tool whose entire pitch is that it
-turns a habit into a check.
-
-**Root cause.** The checks were written by asking "what can go structurally
-wrong with a markdown file" — missing file, bad id, unparseable date, over
-budget. Every one is mechanical and every one was easy. The claim that
-distinguishes this project from a folder of markdown files is a claim about
-*content quality*, which is harder to check, so it never got written and its
-absence was invisible: the documentation asserted it so confidently that
-re-reading the documentation confirmed it.
-
-**Guardrail.** Section presence and minimum real content are now checked per
-entry, per log, configurable via `sections` in `bitacora.config.json`, with
-`Guardrail` getting a message that says what a guardrail is rather than just
-that the section is short. Two smoke-test assertions pin it: one for a gestural
-guardrail, one for a missing section. More generally, the `sections` mechanism
-means any claim the templates make about entry structure is now enforced by the
-same code path rather than by hope.
-
 
 ## Archived
 
 Older entries, one line each. `recall` still searches them in full.
 
+- `M-0004` doctor did not enforce the Guardrail section the whole project argues for — [doctor, thesis, verification] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0003` An unquoted heredoc let the shell expand backticks inside the payload — [tooling, shell] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0002` paste -d silently cycles through its delimiter list — [hooks, shell] → `docs/bitacora-archive/mistakes-2026.md`
 - `M-0001` The entry parser counted a quoted marker in prose as a real entry — [parser, docs, self-reference] → `docs/bitacora-archive/mistakes-2026.md`
